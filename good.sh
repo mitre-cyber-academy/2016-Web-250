@@ -1,0 +1,1 @@
+echo "The flag is MCA-FE4B2074"
