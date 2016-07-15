@@ -24,7 +24,6 @@ from numpy import std
 import re
 import SocketServer
 import socket
-import ssl
 import time
 
 class MoguiServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -33,7 +32,6 @@ class MoguiServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     daemon_threads = True
     allow_reuse_address = True
     payloads = {}
-    ssl_options = None
 
     def __init__(self, server_address):
         """Accepts a tuple of (HOST, PORT)"""
@@ -61,11 +59,6 @@ class MoguiServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
                      "Connection: keep-alive\r\n\r\n") % time.ctime(time.time())
 
         SocketServer.TCPServer.__init__(self, server_address, HTTPHandler)
-
-    def setssl(self, cert_file, key_file):
-        """Sets SSL params for the server sockets"""
-
-        self.ssl_options = (cert_file, key_file)
 
     def setscript(self, uri, params):
         """Sets parameters for each URI"""
@@ -112,18 +105,6 @@ class HTTPHandler(SocketServer.BaseRequestHandler):
         self.request.setsockopt(socket.SOL_SOCKET,
                                 socket.SO_SNDBUF,
                                 self.server.buffer_size)
-
-        # Attempt to wrap the TCP socket in SSL
-
-        try:
-            if self.server.ssl_options:
-                self.request = ssl.wrap_socket(self.request,
-                                               certfile=self.server.ssl_options[0],
-                                               keyfile=self.server.ssl_options[1],
-                                               server_side=True)
-        except ssl.SSLError:
-            self.log("SSL negotiation failed")
-            return
 
         # Parse the HTTP request
 
@@ -199,11 +180,10 @@ class HTTPHandler(SocketServer.BaseRequestHandler):
 
 if __name__ == "__main__":
 
-    HOST, PORT = "0.0.0.0", 5555
+    HOST, PORT = "0.0.0.0", 80
 
     SERVER = MoguiServer((HOST, PORT))
     SERVER.setscript("/setup.bash", ("ticker.sh", "good.sh", "bad.sh", 2.0, 0.1))
-    SERVER.setssl("cert.pem", "key.pem")
 
     print "Listening on %s %s" % (HOST, PORT)
     SERVER.serve_forever()
