@@ -1,0 +1,2 @@
+The original code can be found at https://www.idontplaydarts.com/2016/04/detecting-curl-pipe-bash-server-side/.  Changes were made to good.sh and bad.sh to make them reflect the competition environment more.
+The correct answer can be retrieved by using curl to access the file.  The incorrect file will be sent if curl | bash is used.
